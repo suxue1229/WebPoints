@@ -31,6 +31,70 @@ alert(dogB.species); // 猫科
 由于所有的实例对象共享同一个prototype对象，那么从外界看起来，prototype对象就好像是实例对象的原型，而实例对象则好像"继承"了prototype对象一样。
 
 ------------
+### 继承
+```javascript
+function Person(name) {
+    this.name = name
+    this.getName=function(){
+        console.log(`my name is ${name}`)
+    }
+}
+Person.prototype.say = function () {
+    console.log('hello world')
+}
 
+function My() {
+    Person.apply(this, arguments)                 //My继承Person中的属性和方法
+}
+My.prototype = Object.create(Person.prototype)   //My继承Person原型对象中属性
+My.prototype.constructor = My                    //修正原型对象构造函数指向
+let my = new My('hkj')      
+console.log(my.name)                             //hkj
+my.getName()                                     //my name is hkj
+my.say()                                         //hello world
+```
+**tip：在本文中prototype,原型对象，共享属性均表示同一个东西**
+
+>可以看到My中并没有定义name值，getName和say方法，但是实例化出来的my依然可以调用，这就是继承了Person中的属性和方法。而上面代码中最核心的部分就是这两行，①`Person.apply(this, arguments) `当前对象继承Person中属性和方法，②`My.prototype = Object.create(Person.prototype)` My的共享属性prototype也继承了Person的共享属性prototype。
+
+### 原型链
+可以看到上面原型继承中我用了一行`My.prototype = Object.create(Person.prototype)`这个代码，其实这是Object中的一个用于继承prototype的方法。如果换种写法，上面代码全等于:`My.prototype.__proto__ = Person.prototype`
+
+`__proto__`是什么
+
+这个属性其实就是共享属性继承的一座桥，可以理解为它将Person共享属性拷贝到My的共享属性中，你可能会想为什么不直接用`My.prototype = Person.prototype`这样不就也可以继承属性了吗。但是这种赋值方式会导致My的prototype和Person的prototype指向同一个对象，当My对prototype进行操作时也会影响Person的Prototype。而有了`__proto__`以后就相当于拷贝了一个副本到My中，两者的prototype相互独立互不影响。
+```javascript
+function Person(name) {
+    this.name = name
+    this.getName=function(){
+        console.log(`my name is ${name}`)
+    }
+}
+Person.prototype.say = function () {
+    console.log('hello world')
+}
+
+function My() {
+    Person.apply(this, arguments)   //My继承Person的属性和方法
+}
+My.prototype = Object.create(Person.prototype) //My继承Person原型对象中属性
+My.prototype.constructor = My 
+let my = new My('hkj')
+console.log(my.__proto__)                   // 1
+console.log(My.prototype)                   // 2
+console.log(My.prototype.__proto__)         // 3
+console.log(Person.prototype)               // 4
+console.log(Person.prototype.__proto__)     // 5
+console.log(Object.prototype)               // 6
+```
+[![](https://imgedu.lagou.com/3d53ae8f78294d8ba3fc61c75d0e67ff.jpg)](https://imgedu.lagou.com/3d53ae8f78294d8ba3fc61c75d0e67ff.jpg)
+
+分析输出结果，发现1和2,3和4,5和6都指向的是同一个对象。套用刚才的知识点my继承了My中的共享属性所以`my.__proto__`与`My.prototype`相等。而My的prototype继承了Person的prototype中的属性所以`My.prototype.__proto__`与`Person.prototype`相等。可以看到通过`__proto__`这个属性将实例my、子类My与父类Person的共享属性像链条一样连接了起来，这就是原型链。
+
+`Object.prototype`
+
+可以看到最后有两行代码也相等`Person.prototype.__proto__`与`Object.prototype`。这是因为所有对象都继承了Object的方法。`Object.prototype`为所有原型链的终点。对象原型继承了Object原型中的属性和方法。因此`Person.prototype.__proto__`与`Object.prototype`相等。 因为Object已经到了最顶级，所以`Object.prototype.__proto__`指向的对象为null，它不继承于任何对象。
 ### 参考文献：
-http://www.ruanyifeng.com/blog/2011/06/designing_ideas_of_inheritance_mechanism_in_javascript.html
+ 1. http://www.ruanyifeng.com/blog/2011/06/designing_ideas_of_inheritance_mechanism_injavascript.html
+ 1. https://www.lagou.com/lgeduarticle/78789.html
+
