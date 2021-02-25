@@ -1,0 +1,10 @@
+##1. 统计数组元素出现次数的最简单方法
+```javascript
+	 let a = "芳草萋萋鹦鹉洲"
+	 let arr = a.split("")
+	 var counts = {};
+	arr.forEach(function (item) {
+		counts[item] = (counts[item] || 0) + 1;
+	});
+	console.log("counts", counts)  // {芳: 1, 草: 1, 萋: 2, 鹦: 1, 鹉: 1}
+```
